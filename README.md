@@ -20,8 +20,8 @@ Run the server with below command if you don't want any server side logs (May be
 
 Once the server is successfully running without any errors, visit the below links for accessing the application.
 
-To join as an agent: `https://localhost:8080/?roomId=1234567890&peerName=PeerName1&role=agent`
-To join as a client: `https://localhost:8080/?roomId=1234567890&peerName=peerName2&role=client`
+To start a room: `https://localhost:8080/`
+To join a room with a link: `https://localhost:8080/?roomId=1234567890`
 
 ## Server
 
