@@ -1,0 +1,29 @@
+{
+  "name": "pixdynamics",
+  "version": "1.0.0",
+  "description": "prod grade p2p call skeleton for pixdynamics ",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon app.js",
+    "devwithdebug": "NODE_ENV=development DEBUG=Cignal-Server:* DEBUG_COLORS=1 nodemon app.js"
+  },
+  "author": "Saurav Panda",
+  "license": "Unlicense",
+  "dependencies": {
+    "awaitqueue": "^2.4.0",
+    "body-parser": "^1.20.0",
+    "cors": "^2.8.5",
+    "debug": "^4.3.4",
+    "dotenv": "^16.0.1",
+    "ejs": "^3.1.8",
+    "express": "^4.18.1",
+    "helmet": "^5.1.0",
+    "socket.io": "^4.5.1",
+    "spdy": "^4.0.2",
+    "winston": "^3.8.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.18"
+  }
+}
