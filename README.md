@@ -150,7 +150,7 @@ Below are the functionaities available in the room object.
 
 `cignal.joinRoom()` is the function to initiate the call. This function can be called only after 2 peers are available inside a room. If only one peer is available it will throw an client side error and returns `success` false.
 
-`cignal.copyLink(\`${url}?roomId=${cignal.id}\`)` is the function to copy the link and send it to somebody else for joining a room. This function is only needed on the side of the peer who is initiating the call.
+`cignal.copyLink(`\`${url}?roomId=${cignal.id}\`)` is the function to copy the link and send it to somebody else for joining a room. This function is only needed on the side of the peer who is initiating the call.
 
 `cignal.leaveRoom()` is the function to leave the room. This will reset all WebRTC related parameters. This fuction is called when hangup button is clicked in the demo application. `hangUp()` which performs ui level changes in the demo application. You need do your ui level changes to end a call by using a similar function.
 
