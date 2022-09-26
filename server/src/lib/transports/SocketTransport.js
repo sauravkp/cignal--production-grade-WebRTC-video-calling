@@ -1,4 +1,4 @@
-const { Logger } = require("../../config");
+const { Logger, iceServers } = require("../../config");
 const logger = new Logger("SocketTransport");
 const EventEmitter = require("events").EventEmitter;
 
@@ -65,7 +65,10 @@ class SocketTransport extends EventEmitter {
       if (reason === "ping timeout") that.emit("disconnect");
       else that.emit("close");
     });
-
+    this._socket.on("fetchIceServers", (arg, callback) => {
+      logger.info("fetched ice servers:%o", iceServers);
+      callback(iceServers);
+    });
     this._socket.on("reconnected", () => {
       that.emit("reconnected");
     });

@@ -1,48 +1,57 @@
 import { Cignal } from "./lib/Cignal.js";
 import { getUrlParam } from "./utils/getUrlVars.js";
-
-const role = getUrlParam("role", "agent");
+import { Logger } from "./lib/Logger.js";
+const logger = new Logger("index");
+let peerNamePrompt = window.prompt("What's your name?", "Peer");
 const peerId = undefined;
-const peerName = getUrlParam("peerName", "Agent");
-const roomId = "987654321";
-const url = "https://localhost:8080/";
+const peerName = peerNamePrompt === null ? "Peer" : peerNamePrompt;
+const roomId = getUrlParam("roomId", null);
+const url = `https://${window.location.host}/`;
 let cignal;
 
 document.getElementById("otherElements").hidden = true;
 const usernameInput = document.querySelector("#usernameInput");
-const userRoleAgent = document.querySelector("#agent");
-const userRoleClient = document.querySelector("#client");
+const loginBtn = document.querySelector("#loginBtn");
 const usernameShow = document.querySelector("#showLocalUserName");
 const showAllUsers = document.querySelector("#allUsers");
 const remoteUsernameShow = document.querySelector("#showRemoteUserName");
-const loginBtn = document.querySelector("#loginBtn");
-// const callToUsernameInput = document.querySelector("#callToUsernameInput");
 const callBtn = document.querySelector("#callBtn");
 const hangUpBtn = document.querySelector("#hangUpBtn");
 const localVideo = document.getElementById("localVideo");
 const remoteVideo = document.getElementById("remoteVideo");
+const copyBtn = document.querySelector("#copyBtn");
+const informPeerBtn = document.querySelector("#informPeerBtn");
 
 window.addEventListener("load", async function () {
-  console.log("All assets are loaded");
-  console.log(window.location);
+  logger.debug("All assets are loaded");
+  logger.debug(window.location);
 
-  cignal = await Cignal.createRoom({ url, peerId, roomId, peerName, role });
-  console.log(cignal);
-  usernameShow.innerHTML = `Hello,  ${cignal.data.myDisplayName}(${cignal.data.myRole})`;
+  cignal = await Cignal.createRoom({ url, peerId, roomId, peerName });
+  logger.debug("cignal is:%O", cignal);
+  usernameShow.innerHTML = `Hello,  ${cignal.data.myDisplayName}`;
   cignal.on("remoteStream", (remoteStream) => {
-    console.log("got remote stream");
+    logger.debug("got remote stream");
     remoteVideo.srcObject = remoteStream;
+    remoteUsernameShow.innerHTML = cignal.data.remoteDisplayName;
   });
 
   cignal.on("localStream", (localStream) => {
-    console.log("got remote stream");
+    logger.debug("got local stream");
     localVideo.srcObject = localStream;
-    document.getElementById("myName").hidden = true;
+    // document.getElementById("myName").hidden = true;
     document.getElementById("otherElements").hidden = false;
+
+    document.getElementById("clientLinkHelperText").hidden = true;
+    if (!roomId) {
+      showAllUsers.innerHTML = `Other user in cignal room(${cignal.id}): None`;
+      document.getElementById("clientLink").style.display = "flex";
+      const clientLink = `${url}?roomId=${cignal.id}`;
+      document.getElementById("clientLinkToCopy").innerHTML = clientLink;
+    }
   });
 
-  cignal.on("peerName", (name) => {
-    showAllUsers.innerHTML = `Other user in cignal(${roomId}): ${name}`;
+  cignal.on("peerJoined", (name) => {
+    showAllUsers.innerHTML = `Other user in cignal room(${cignal.id}): ${name}`;
   });
 
   cignal.on("offerReceived", () => {
@@ -52,44 +61,60 @@ window.addEventListener("load", async function () {
 
   cignal.on("clientError", ({ reason, error }) => {
     alert(`${reason}`);
-    console.error(error);
+    logger.debug("Client side error:%O", error);
+  });
+
+  cignal.on("serverError", ({ reason, error }) => {
+    alert(`${reason.message}`);
+    logger.debug("Server side error:%O", error);
   });
 
   cignal.on("peerHangUp", () => {
     hangUp();
   });
+  cignal.on("information", (data) => {
+    alert(`Message received from peer is-: ${data.chatMessage} `);
+    logger.debug("Message received from peer is:%o", data.chatMessage);
+    // this can be used for any arbitrary data transfer like chatmessages, audio mute / unmute messages etc.
+  });
 });
 
 /* START: Initiate call to any user i.e. send message to server */
 callBtn.addEventListener("click", async function () {
-  console.log("inside call button");
-  if (!cignal.data.remotePeerId) {
-    alert("No remote peer availabe for call!");
-    return;
-  }
-  console.log("create an offer to-", cignal.data.remotePeerId);
-  await cignal.createPeerOffer();
-  document.getElementById("callOngoing").style.display = "block";
-  document.getElementById("callInitiator").style.display = "none";
-});
+  logger.debug("inside call button");
 
+  let res = await cignal.joinRoom();
+  if (res.success) {
+    document.getElementById("callOngoing").style.display = "block";
+    document.getElementById("callInitiator").style.display = "none";
+    document.getElementById("clientLink").style.display = "none";
+  }
+});
+copyBtn.addEventListener("click", async () => {
+  logger.debug("inside copy button");
+  cignal.copyLink(`${url}?roomId=${cignal.id}`);
+});
 //hang up
 hangUpBtn.addEventListener("click", async function () {
-  cignal.send({
-    type: "leave",
-    peer: cignal.data.remotePeerId,
-  });
-  await cignal.handleLeave();
-  hangUp();
+  let res = await cignal.leaveRoom();
+  if (res.success) hangUp();
+});
+
+informPeerBtn.addEventListener("click", async () => {
+  logger.debug("inside inform peer button");
+  cignal.inform({ chatMessage: "Hello world!" });
 });
 
 async function hangUp() {
   usernameShow.innerHTML = "";
   showAllUsers.innerHTML = "";
-  document.getElementById("myName").hidden = false;
+  // document.getElementById("myName").hidden = false;
   document.getElementById("otherElements").hidden = true;
   document.getElementById("callOngoing").style.display = "none";
+  document.getElementById("allUsers").style.display = "none";
+  document.getElementById("clientLink").style.display = "none";
   document.getElementById("callInitiator").style.display = "block";
+  document.getElementById("thankYou").style.display = "flex";
   remoteVideo.removeAttribute("src");
   remoteVideo.removeAttribute("srcObject");
   localVideo.removeAttribute("src");

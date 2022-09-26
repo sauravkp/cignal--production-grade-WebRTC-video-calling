@@ -1,11 +1,13 @@
 // const EventEmitter = require("eventemitter3");
 // const { io } = require("socket.io-client");
 import { EventEmitter } from "./EventEmitter.js";
+import { Logger } from "./Logger.js";
+const logger = new Logger("SocketTransport");
 
 export class SocketTransport extends EventEmitter {
   constructor({ url, roomId, peerId, peerName }) {
     super();
-    console.log("constructor() ", { url, roomId, peerId, peerName });
+    logger.debug("constructor():%o ", { url, roomId, peerId, peerName });
     this._closed = false;
     this._params = { url, roomId, peerId, peerName };
     this._socket = null;
@@ -19,7 +21,7 @@ export class SocketTransport extends EventEmitter {
   close() {
     if (this._closed) return;
 
-    console.log("close()");
+    logger.debug("close()");
 
     // Don't wait for the WebSocket 'close' event, do it now.
     this._closed = true;
@@ -70,15 +72,15 @@ export class SocketTransport extends EventEmitter {
       },
     });
     socket.on("connect", () => {
-      console.log("Socket connected!!");
+      logger.debug("Socket connected!!");
     });
     socket.on("reconnect", () => {
-      console.log("Socket reconnected after disconnect!!");
+      logger.debug("Socket reconnected after disconnect!!");
       socket.emit("reconnected");
     });
     socket.on("message", (message) => {
       const parsedMessage = JSON.parse(message);
-      console.log("New mesage received with id", parsedMessage.type);
+      logger.debug("New mesage received with id:%o", parsedMessage.type);
       that.emit("message", parsedMessage);
     });
     this._socket = socket;

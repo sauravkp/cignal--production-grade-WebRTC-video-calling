@@ -1,4 +1,4 @@
-const { Logger } = require("../../config");
+const { Logger, iceServers } = require("../../config");
 const logger = new Logger("Room");
 const Peers = require("./Peers");
 const EventEmitter = require("events").EventEmitter;
@@ -24,6 +24,19 @@ class Cignal extends EventEmitter {
   }
 
   handleSocketConnection({ peerId, peerName, socket }) {
+    if (this._participants.peers.length > 1) {
+      logger.warn(
+        "handleSocketConnection() | More than 2 peers are not allowed in one room, ignoring it [peerId:%s]",
+        peerId
+      );
+      socket.send(
+        JSON.stringify({
+          type: "error",
+          reason: "Not allowed to join as the room already has 2 participants!",
+        })
+      );
+      return;
+    }
     let peer = this._participants.getPeer(peerId);
     if (!peer) {
       try {
@@ -41,7 +54,7 @@ class Cignal extends EventEmitter {
           logger.warn("No other peer available yet!!");
         }
       } catch (err) {
-        logger.error("Peers.createPeer() failed:%o", error);
+        logger.error("Peers.createPeer() failed:%o", err);
       }
     }
     // else{
@@ -79,6 +92,17 @@ class Cignal extends EventEmitter {
         );
 
         this._close();
+      } else {
+        let otherPeer = this._participants.peers[0];
+        logger.info(
+          "Informing other peer:%s about peer:%s leaving room",
+          otherPeer.id,
+          peer.id
+        );
+        otherPeer.send({
+          type: "peerLeft",
+          peerId: peer.id,
+        });
       }
     });
   }
@@ -104,6 +128,7 @@ class Cignal extends EventEmitter {
             offer: data.offer,
             peer: peer.id,
             name: peer.data.displayName,
+            iceServers,
           });
         } else {
           peer.send({
@@ -182,6 +207,23 @@ class Cignal extends EventEmitter {
               title: "Error!",
               message:
                 "Other peer seems to be unavailable! May not be able to leave the rooms now!",
+            },
+          });
+        }
+
+        break;
+      case "information":
+        const otherPeerInfo = this._participants.getPeer(data.peer);
+        if (otherPeerInfo && otherPeerInfo.connected) {
+          otherPeerInfo.send(data);
+        } else {
+          peer.send({
+            type: "notify",
+            notification: {
+              type: "danger",
+              title: "Error!",
+              message:
+                "Other peer seems to be unavailable! Not able to send information. Try again later.",
             },
           });
         }

@@ -2,7 +2,7 @@
 
 const { express, show, stats, config } = require("../config");
 const spdy = require("spdy");
-const { initSocketServer } = require("../lib");
+const { initSocketServer, store } = require("../lib");
 const { Server } = require("socket.io");
 const routes = require("../../routes");
 

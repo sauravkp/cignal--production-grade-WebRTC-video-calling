@@ -14,32 +14,33 @@
       integrity="sha384-7EyYLQZgWBi67fBtVxw60/OWl1kjsfrPFcaU0pp0nAh+i8FD068QogUvg85Ewy1k"
       crossorigin="anonymous"
     ></script>
-    <!-- <script type="module">
-  import { io } from "https://cdn.socket.io/4.3.2/socket.io.esm.min.js";
-</script> -->
   </head>
 
   <body>
-    <div id="myName">
-      Connecting to server. Please wait...
-      <!-- <input type="text" id="usernameInput" placeholder="My name">
-      <fieldset>
-    <legend>Select a role:</legend>
+    <div id="clientLink" style="display:none; justify-content:center; margin-top: 10px;">
+      <div>
+        <h5>Share the below link with other person to join this room.</h5>
+      <span id="clientLinkToCopy" style="min-width:350px; border:1px solid; margin:5px;padding:5px"></span>
+     
 
-    <div>
-      <input type="radio" id="client" name="role" value="client"
-             >
-      <label for="client">Client</label>
+
+      <input type="button" id="copyBtn" value="Copy"></input>
+      </div>
     </div>
-
-    <div>
-      <input type="radio" id="agent" name="role" value="agent">
-      <label for="agent">Agent</label>
+    <div style="display:flex; justify-content:center; margin-top: 30px;">
+       <span id="clientLinkHelperText" >Generating the link. Please wait...</span>
     </div>
+    <!-- <div id="myName" style="display:flex; justify-content:center;">
+    
+      <input type="text" id="usernameInput" placeholder="My name">
 
-</fieldset>
+      <input type="button" id="loginBtn" value="Save"></input>
+    </div> -->
+     <div id="thankYou" style="display:none; flex-direction: column; align-items: center; justify-content:center; margin-top: 10px;">
+        <h5>Thank you for using Cignal video call demo. </h5>
+        <h5> You can refresh this page to start another call.</h5>
+        <h5> You can close the this page, if you have received a call from someone else.</h5>
 
-      <input type="button" id="loginBtn" value="Save"></input> -->
     </div>
     <div>
       <h3><span id="allUsers"></span></h3>
@@ -57,7 +58,7 @@
           border-radius: 15px;
         "
       ></video>
-      <b><span id="showRemoteUserName"></span></b>
+      
       <video
         id="remoteVideo"
         autoplay
@@ -68,7 +69,7 @@
           border-radius: 15px;
         "
       ></video>
-
+      <b><span id="showRemoteUserName"></span></b>
       <br />
       <div id="callInitiator">
         <!-- <input id = "callToUsernameInput" 
@@ -77,12 +78,11 @@
         <button id="callBtn" class="btn-success btn">Call</button>
         <!-- <button id = "hangUpBtn" class = "btn-danger btn">Hang Up</button>  -->
       </div>
-      <div id="callReceiver" style="display: none">
-        <button id="answerBtn" class="btn-success btn">Answer</button>
-        <button id="declineBtn" class="btn-danger btn">Decline</button>
-      </div>
       <div id="callOngoing" style="display: none">
         <button id="hangUpBtn" class="btn-danger btn">Hang Up</button>
+      </div>
+      <div id="informPeerBlock" style="display: block;margin-top: 10px;">
+        <button id="informPeerBtn" class="btn-success btn">Inform Peer</button>
       </div>
       <!-- <input type="button" id="start" onclick="start(true)" value="Start Video"></input>
       <input type="button" id="Stop" onclick="stop(true)" value="Stop Video"></input> -->

@@ -1,15 +1,15 @@
 {
-  "name": "pixdynamics",
+  "name": "cignal",
   "version": "1.0.0",
-  "description": "prod grade p2p call skeleton for pixdynamics ",
+  "description": "minimalistic yet scalable WebRTC signaling server, community edition",
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon app.js",
+    "dev": "NODE_ENV=development nodemon app.js",
     "devwithdebug": "NODE_ENV=development DEBUG=Cignal-Server:* DEBUG_COLORS=1 nodemon app.js"
   },
   "author": "Saurav Panda",
-  "license": "Unlicense",
+  "license": "MIT",
   "dependencies": {
     "awaitqueue": "^2.4.0",
     "body-parser": "^1.20.0",

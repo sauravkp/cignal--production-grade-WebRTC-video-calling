@@ -40,4 +40,12 @@ async function getOrCreate({ roomId }) {
   return room;
 }
 
-module.exports = { initSocketServer, store };
+async function totalRoomsRunning() {
+  return Array.from(store.keys()).length;
+}
+
+async function allRooms() {
+  return Array.from(store.values());
+}
+
+module.exports = { initSocketServer, totalRoomsRunning, allRooms };

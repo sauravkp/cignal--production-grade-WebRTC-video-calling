@@ -1,7 +1,6 @@
 import { getRandomInt } from "../utils/getRandomInt.js";
 import { uuidv4 } from "../utils/uuidv4.js";
 import { SocketTransport } from "./SocketTransport.js";
-import { iceServers } from "../utils/iceServers.js";
 import { EventEmitter } from "./EventEmitter.js";
 import { Logger } from "./Logger.js";
 const logger = new Logger("Room");
@@ -12,11 +11,11 @@ export class Cignal extends EventEmitter {
     roomId = undefined,
     peerId = undefined,
     peerName = undefined,
-    role = "agent",
+    role = undefined,
   }) {
     if (!peerId) peerId = uuidv4();
     if (!roomId) roomId = getRandomInt();
-    if (!url) return { success: false, reason: "url is required!" };
+    if (!url) url = window.location.href;
     //  if (!url) return { success: false, reason: "url is required!" };
     const socket = new SocketTransport({ url, roomId, peerId, peerName });
     return new Cignal({ socket, peerId, roomId, peerName, role });
@@ -31,6 +30,10 @@ export class Cignal extends EventEmitter {
     this._remoteStream = null;
     this._data = {};
     this.prepareForCall({ peerName, peerId, role });
+  }
+
+  get id() {
+    return this._id;
   }
 
   get data() {
@@ -69,10 +72,19 @@ export class Cignal extends EventEmitter {
     this._socket.send(msg);
   }
 
+  inform(msg) {
+    if (this._closed) return;
+    if (!this.data.remotePeerId) {
+      alert("No remote peer available!");
+      return;
+    }
+    let newMsg = { type: "information", peer: this.data.remotePeerId, msg };
+    this._socket.send(newMsg);
+  }
+
   async request({ type, message }) {
     const response = await this._socket.request({ type, message });
     if (response) return response;
-    // else console.error("Response not received from the server side!")
   }
 
   gotMessageFromServer(data) {
@@ -105,9 +117,26 @@ export class Cignal extends EventEmitter {
         this.handleLeave();
         this.emit("peerHangUp");
         break;
-      case "error":
+      case "information":
+        this.emit("information", data.msg);
+        break;
+      case "notify":
         // handleNotification(data.notification);
-        this.emit("serverError", data.details);
+        this.emit("serverError", { reason: data.notification, error: null });
+        break;
+      case "peerLeft":
+        if (this.pc) {
+          this.handleLeave();
+          this.emit("peerHangUp");
+        }
+        this.data.remoteDisplayName = null;
+        this.data.remotePeerId = null;
+        this.emit("peerJoined", "None");
+        alert("Other person disconnected from the room");
+
+        break;
+      case "error":
+        alert(data.reason);
         break;
       default:
         break;
@@ -155,7 +184,7 @@ export class Cignal extends EventEmitter {
     } else {
       // showAllUsers.innerHTML = `Other user in room(${this._id}): None`;
     }
-    this.emit("peerName", this.data.remoteDisplayName);
+    this.emit("peerJoined", this.data.remoteDisplayName);
   }
 
   async gotRemoteTrack(event) {
@@ -171,15 +200,29 @@ export class Cignal extends EventEmitter {
     this.emit("remoteStream", this._remoteStream);
   }
 
-  async createPeerOffer() {
+  async joinRoom() {
     let that = this;
+    if (!this.data.remotePeerId) {
+      // alert("No remote peer availabe for call!");
+      this.clientErrorHandler({
+        reason: "No remote peer availabe for call!",
+        error: null,
+      });
+      return { success: false };
+    }
+    logger.debug("create an offer to-:%s", this.data.remotePeerId);
+    const iceServers = await this._socket.request({
+      type: "fetchIceServers",
+      message: {},
+    });
+    logger.debug("ice servers are:%o", iceServers);
     this._peerConnection = new RTCPeerConnection({ iceServers });
     logger.debug(
-      "connection state inside createPeerOffer:%s",
+      "connection state inside joinRoom:%s",
       this._peerConnection.connectionState
     );
     this._peerConnection.onicecandidate = function (event) {
-      logger.debug("onicecandidate inside createPeerOffer:%o", event.candidate);
+      logger.debug("onicecandidate inside joinRoom:%o", event.candidate);
       if (event.candidate) {
         that.send({
           type: "candidate",
@@ -211,10 +254,17 @@ export class Cignal extends EventEmitter {
         logger.debug("Error when creating an offer", error);
       });
     this._peerConnection.ontrack = (event) => that.gotRemoteTrack(event);
+
+    return { success: true };
   }
 
-  async handleOffer({ peer, name, offer }) {
+  async handleOffer({ peer, name, offer, iceServers }) {
     let that = this;
+    // const iceServers = await this._socket.request({
+    //   type: "fetchIceServers",
+    //   message: {},
+    // });
+    logger.debug("ice servers are:%o", iceServers);
     this._peerConnection = new RTCPeerConnection({ iceServers });
     logger.debug("Peer connection in handle offer is:%O", this._peerConnection);
     this.data.remoteDisplayName = name;
@@ -254,7 +304,26 @@ export class Cignal extends EventEmitter {
   }
 
   handleCandidate(candidate) {
-    this._peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+    if (this.pc)
+      this._peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+    else {
+      logger.error("ICE candidates arrived before peer connection creation!");
+    }
+  }
+
+  async leaveRoom() {
+    try {
+      this.send({
+        type: "leave",
+        peer: this.data.remotePeerId,
+      });
+      this.handleLeave();
+      return { success: true };
+    } catch (error) {
+      logger.error("Error while room leave:%O", error);
+      this.clientErrorHandler({ reason: "Error while leaving room", error });
+      return { success: false };
+    }
   }
 
   async handleLeave() {
@@ -289,5 +358,17 @@ export class Cignal extends EventEmitter {
 
   clientErrorHandler({ reason, error }) {
     this.emit("clientError", { reason, error });
+  }
+
+  copyLink(textToCopy) {
+    navigator.clipboard.writeText(textToCopy).then(
+      function () {
+        logger.debug("Async: Copying to clipboard was successful!");
+        alert("Link copied!!");
+      },
+      function (err) {
+        logger.error("Async: Could not copy text:%o ", err);
+      }
+    );
   }
 }
