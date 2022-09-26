@@ -1,2 +1,2 @@
-# pixdynamics-p2p
-This is a private repo for pixdynamics p2p project.
+# Cignal WebRTC signalling server
+A minimalistic WebRTC signalling server written in Nodejs with Socket.io. It currently supports p2p video calling only.
