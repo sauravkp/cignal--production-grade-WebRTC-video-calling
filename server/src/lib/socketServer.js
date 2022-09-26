@@ -11,14 +11,14 @@ const initSocketServer = (io) => {
     let sessionId = socket.id;
     let query = socket.handshake.query;
     logger.info("New Socket client connected-:%s,query:%o", sessionId, query);
-    let { roomId, peerId, peerName } = query;
+    let { roomId, peerId, peerName, role } = query;
 
     queue
       .push(async () => {
         const room = await getOrCreate({ roomId });
         logger.info("b4 instantiating websocket transport!!");
 
-        room.handleSocketConnection({ peerId, peerName, socket });
+        room.handleSocketConnection({ peerId, peerName, socket, role });
       })
       .catch((error) => {
         logger.error("room creation or room joining failed:%o", error);

@@ -5,11 +5,11 @@ import { Logger } from "./Logger.js";
 const logger = new Logger("SocketTransport");
 
 export class SocketTransport extends EventEmitter {
-  constructor({ url, roomId, peerId, peerName }) {
+  constructor({ url, roomId, peerId, peerName, role }) {
     super();
-    logger.debug("constructor():%o ", { url, roomId, peerId, peerName });
+    logger.debug("constructor():%o ", { url, roomId, peerId, peerName, role });
     this._closed = false;
-    this._params = { url, roomId, peerId, peerName };
+    this._params = { url, roomId, peerId, peerName, role };
     this._socket = null;
     this._createSocket();
   }
@@ -69,6 +69,7 @@ export class SocketTransport extends EventEmitter {
         roomId: this._params.roomId,
         peerId: this._params.peerId,
         peerName: this._params.peerName,
+        role: this._params.role,
       },
     });
     socket.on("connect", () => {

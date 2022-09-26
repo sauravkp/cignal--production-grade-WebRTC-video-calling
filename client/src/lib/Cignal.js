@@ -17,17 +17,18 @@ export class Cignal extends EventEmitter {
     if (!roomId) roomId = getRandomInt();
     if (!url) url = window.location.href;
     //  if (!url) return { success: false, reason: "url is required!" };
-    const socket = new SocketTransport({ url, roomId, peerId, peerName });
-    return new Cignal({ socket, peerId, roomId, peerName, role });
+
+    return new Cignal({ url, peerId, roomId, peerName, role });
   }
-  constructor({ socket, peerId, roomId, peerName, role }) {
+  constructor({ url, peerId, roomId, peerName, role }) {
     super();
     this._closed = false;
     this._id = roomId;
-    this._socket = socket;
+    this._socket = null;
     this._peerConnection = null;
     this._localStream = null;
     this._remoteStream = null;
+    this._url = url;
     this._data = {};
     this.prepareForCall({ peerName, peerId, role });
   }
@@ -64,7 +65,7 @@ export class Cignal extends EventEmitter {
     this.data.myDisplayName = peerName;
     this.data.myPeerId = peerId;
     this.data.myRole = role;
-    this._socket.on("message", (data) => this.gotMessageFromServer(data));
+
     await this.getUserMedia();
   }
   send(msg) {
@@ -171,6 +172,14 @@ export class Cignal extends EventEmitter {
 
   getUserMediaSuccess(stream) {
     logger.debug("Inside getUserMediaSuccess");
+    this._socket = new SocketTransport({
+      url: this._url,
+      roomId: this.id,
+      peerId: this.data.myPeerId,
+      peerName: this.data.myDisplayName,
+      role: this.data.myRole,
+    });
+    this._socket.on("message", (data) => this.gotMessageFromServer(data));
     this._localStream = stream;
     this.emit("localStream", this._localStream);
   }
@@ -181,6 +190,7 @@ export class Cignal extends EventEmitter {
       // showAllUsers.innerHTML = `Other user in room(${roomId}): ${allAvailableUsers}`;
       this.data.remoteDisplayName = data.displayName;
       this.data.remotePeerId = data.peerId;
+      this.data.remoteRole = data.role;
     } else {
       // showAllUsers.innerHTML = `Other user in room(${this._id}): None`;
     }

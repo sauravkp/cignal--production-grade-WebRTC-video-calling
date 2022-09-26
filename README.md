@@ -1,6 +1,6 @@
 # Cignal WebRTC signalling server
 
-A minimalistic WebRTC signalling server written in Nodejs with Socket.io. It currently supports p2p video calling only. It has 2 parts, Server and Client. Each of these individual parts has been described below in details. Any team can follow this documentation for effective implementation of both the client and server side libraries. Please don't change the core of the libraries (both client and server) under without proper understanding. You can extend the capabilities of the libraries by creating new functionality in your own custom files but not in the library files.
+A minimalistic WebRTC signalling server written in Nodejs with Socket.io. It currently supports p2p video calling only. It has 2 parts, Server and Client. Each of these individual parts has been described below in details. Any team can follow this documentation for effective implementation of both the client and server side libraries. Please don't change the core of the libraries (both client and server) without proper understanding. You can extend the capabilities of the libraries by creating new functionality in your own custom files but not in the library files.
 
 ## Running the application
 
@@ -171,9 +171,16 @@ Available data fields on the cignal object are as below.
 `cignal.data` : The client side variable store for storing the details like peerIds, displaynames and anything else you need for your application logic.
 
 `cignal.data.myPeerId` : The unique peerId of the call initiator.
+
 `cignal.data.myDisplayName` : The display name of the call initiator.
+
+`cignal.data.myRole` : The role of the call initiator, default `undefined`.
+
 `cignal.data.remotePeerId` : The unique peerId of the call receiver.
+
 `cignal.data.remoteDisplayName' : The display name of the call receiver.
+
+`cignal.data.remoteRole` : The role of the call receiver, default `undefined`.
 
 ## Hosting cignal on a cloud
 

@@ -23,7 +23,7 @@ class Cignal extends EventEmitter {
     logger.info("ROOM [roomId:%s] has been created", roomId);
   }
 
-  handleSocketConnection({ peerId, peerName, socket }) {
+  handleSocketConnection({ peerId, peerName, socket, role }) {
     if (this._participants.peers.length > 1) {
       logger.warn(
         "handleSocketConnection() | More than 2 peers are not allowed in one room, ignoring it [peerId:%s]",
@@ -42,6 +42,7 @@ class Cignal extends EventEmitter {
       try {
         peer = this._participants.createPeer(peerId, socket);
         peer.data.displayName = peerName;
+        peer.data.role = role;
         const otherPeer = this._participants.peers.filter(
           (peer) => peer.id !== peerId
         )[0];
@@ -249,6 +250,7 @@ class Cignal extends EventEmitter {
       details: {
         peerId: peer.id,
         displayName: peer.data.displayName,
+        role: peer.data.role,
       },
     });
   }
