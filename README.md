@@ -156,11 +156,11 @@ Below are the functionaities available in the room object.
 
 `cignal.inform()` is a general purpose function designed to send any kind of messages to the other peer currently joined the room. An example will be to build a chat functionality using this. An example message will look like `cignal.inform({ chatMessage: "Hello world!" })`; This even can be listened on the other peer side using the event listener `cignal.on("information", (data) => { <do something here with the received information> })`
 
-Available data field on the cignal object are as below.
+Available data fields on the cignal object are as below.
 
 'cignal.pc' : The WebRTC peerconnection object used for call. Default `null`.
 
-'cignal.id' : The unique id for this signal, can also be called as `roomId`.
+'cignal.id' : The unique id for this signal. It has the value of roomId which is passed at the time of instantiating the cignal object.
 
 'cignal.closed' : The state of cignal. Default `false`. Once the call is ended, this value is updated to `true`.
 
