@@ -20,8 +20,8 @@ Run the server with below command if you don't want any server side logs (May be
 
 Once the server is successfully running without any errors, visit the below links for accessing the application.
 
-To start a room: `https://localhost:8080/`
-To join a room with a link: `https://localhost:8080/?roomId=1234567890`
+- To start a room: `https://localhost:8080/`
+- To join a room with a link: `https://localhost:8080/?roomId=1234567890`
 
 ## Server
 
@@ -150,7 +150,7 @@ Below are the functionaities available in the room object.
 
 `cignal.joinRoom()` is the function to initiate the call. This function can be called only after 2 peers are available inside a room. If only one peer is available it will throw an client side error and returns `success` false.
 
-`cignal.copyLink(`${url}?roomId=${cignal.id}`)` is the function to copy the link and send it to somebody else for joining a room. This function is only needed on the side of the peer who is initiating the call.
+`cignal.copyLink(\`${url}?roomId=${cignal.id}\`)` is the function to copy the link and send it to somebody else for joining a room. This function is only needed on the side of the peer who is initiating the call.
 
 `cignal.leaveRoom()` is the function to leave the room. This will reset all WebRTC related parameters. This fuction is called when hangup button is clicked in the demo application. `hangUp()` which performs ui level changes in the demo application. You need do your ui level changes to end a call by using a similar function.
 
@@ -189,11 +189,11 @@ cignal-client side libraries will be created after the stable version of cignal-
 
 ## Features in pipeline
 
-1.Support for WebRTC data channels
-2.On-demand mute/unmute
-3.On-demand camera on/off
-4.Client side display of realtime Network status
-5.On-demand ICE restarts to recover from network failures
+1. Support for WebRTC data channels
+2. On-demand mute/unmute
+3. On-demand camera on/off
+4. Client side display of realtime Network status
+5. On-demand ICE restarts to recover from network failures
 
 Drop a mail to `hello@centedge.io` for additional feature requests.
 
