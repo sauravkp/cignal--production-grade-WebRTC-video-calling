@@ -4,6 +4,7 @@ const show = require("./services/logging");
 const stats = require("./services/stats");
 const config = require("./services/config");
 const iceServers = require("./services/iceServers");
+const customIceServers = require("./services/customIceServers");
 module.exports = {
   express,
   stats,
@@ -11,4 +12,5 @@ module.exports = {
   show,
   config,
   iceServers,
+  customIceServers,
 };

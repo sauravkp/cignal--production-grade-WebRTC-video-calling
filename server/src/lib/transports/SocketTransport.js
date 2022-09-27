@@ -1,4 +1,4 @@
-const { Logger, iceServers } = require("../../config");
+const { Logger, iceServers, customIceServers } = require("../../config");
 const logger = new Logger("SocketTransport");
 const EventEmitter = require("events").EventEmitter;
 
@@ -67,7 +67,16 @@ class SocketTransport extends EventEmitter {
     });
     this._socket.on("fetchIceServers", (arg, callback) => {
       logger.info("fetched ice servers:%o", iceServers);
-      callback(iceServers);
+      let selectedIceServers =
+        customIceServers.length > 0 ? customIceServers : iceServers;
+      callback(selectedIceServers);
+    });
+    this._socket.on("setIceServers", (arg, callback) => {
+      logger.info("set ice servers:%O", JSON.parse(arg));
+      let iceServersFromClient = JSON.parse(arg);
+      iceServersFromClient.forEach((element) => customIceServers.push(element));
+      logger.info(" custom ice servers:%o", customIceServers);
+      callback(customIceServers);
     });
     this._socket.on("reconnected", () => {
       that.emit("reconnected");

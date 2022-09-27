@@ -148,6 +148,8 @@ window.addEventListener("load", async function () {
 
 Below are the functionaities available in the room object.
 
+`cignal.setICEServers(iceServers)` is the function to set the TURN server credentials which will be used for the call. It accepts `iceServers` as a parameter. Refer to the `Adding TURN server credentials` section below to know the why and when TURN credentials are needed and how to use them with cignal.
+
 `cignal.joinRoom()` is the function to initiate the call. This function can be called only after 2 peers are available inside a room. If only one peer is available it will throw an client side error and returns `success` false.
 
 `cignal.copyLink(`\`${url}?roomId=${cignal.id}\`)` is the function to copy the link and send it to somebody else for joining a room. This function is only needed on the side of the peer who is initiating the call.
@@ -158,11 +160,11 @@ Below are the functionaities available in the room object.
 
 Available data fields on the cignal object are as below.
 
-'cignal.pc' : The WebRTC peerconnection object used for call. Default `null`.
+`cignal.pc` : The WebRTC peerconnection object used for call. Default `null`.
 
-'cignal.id' : The unique id for this signal. It has the value of roomId which is passed at the time of instantiating the cignal object.
+`cignal.id` : The unique id for this signal. It has the value of roomId which is passed at the time of instantiating the cignal object.
 
-'cignal.closed' : The state of cignal. Default `false`. Once the call is ended, this value is updated to `true`.
+`cignal.closed` : The state of cignal. Default `false`. Once the call is ended, this value is updated to `true`.
 
 `cignal.socket` : The underlying socket connection responsible for carrying message from the browser client to the server and maintaining the connection throughout the lifetime of the call.
 
@@ -184,7 +186,83 @@ Available data fields on the cignal object are as below.
 
 ## Hosting cignal on a cloud
 
-Hosting the app on a cloud like digitalocean to use it from the internet, will be added in this section soon.
+Hosting the app on a cloud service provider like digitalocean is not a very complex thing to do. Below are the steps to to host the application in digitalocean.
+
+1. Login to your digitalocean account. Click here to create a [digitalocean](https://m.do.co/c/468c166e0c96) account with $100 free credit for first 60 days, if you don't have one.
+2. Create a Ubuntu 20.04 LTS droplet with 2vCPU, 4GB RAM. It should be enough for supporting medium scalability,i.e 100s of concurrent users. If you want to support 1000s of concurrent users, take next configuration of 4 vCPU and 8GB RAM.
+3. Install Nodejs 16.0 LTS, once you login the newly created droplet using SSH.
+4. Create a folder in the `/home/ubuntu/` folder using the command `mkdir app`.
+5. `cd app` to go inside the app folder and do a git clone of cignal using command `git clone https://github.com/sauravkp/cignal.git`.
+6. Once successfully cloned, do a `cd cignal` and then `npm install`.
+7. By now the server is ready to be started. You can do a `npm run dev` to run without debug logs or `npm run devwithdebug` to run with debug logs.
+8. Now you can access the server using the public ip of your digitalocean server using this link `https://public-ip:8080`. Fot testing it is good enough. Here we are using a self signed ssl certificate to enable https which is not fit for production usage. For production usage, we need to set up nginx as a reverse proxy along with a domain and ssl certificate.
+9. Follow [this article](https://www.digitalocean.com/community/tutorials/how-to-install-nginx-on-ubuntu-20-04) to setup nginx on ubuntu 20.04 as a reverse proxy.
+10. In the above mentioned step, you have configured http but not https. In order to configure https, install `certbot` package from [this link](https://certbot.eff.org/instructions?ws=nginx&os=ubuntufocal) by following the steps as mentioned. You also need to allow access to port 443 in case you have enabled ufw firewall as mentioned in the above article using this command `sudo ufw allow 'Nginx HTTPS'`
+11. By now https is enabled in your domain but it is not running our application because we haven't yet informed nginx about our application.
+12. In order to do so, we need to edit the nginx config file using command `sudo nano /etc/nginx/sites-enabled/<your-domain>` as created in the step 9. Add the below code to the https server block which is listening to port 443.
+
+```
+location / {
+ proxy_set_header Host $host;
+ proxy_http_version 1.1;
+ proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+ proxy_set_header Upgrade $http_upgrade;
+ proxy_set_header Connection "upgrade";
+ proxy_pass  https://localhost:8080/;
+}
+```
+
+13. Once the above code block is added, save and exit your nginx config file, check your nginx config for any error using `sudo nginx -t`. If there are no errors and all is well, restart the nginx server using command `sudo systemctl restart nginx`
+14. Now if you visit this link `https://<your-domain>`, you should get the default UI and you should be able to make a test call using it. If the test call is successful, the signalling server is now ready for usage.
+15. The final step is to replace the default url value with this newly created signalling server url so that your application can use this newly created signalling server url for connecting video calls.
+16. You are done!!
+
+## Adding TURN server credentials
+
+By default, cignal uses publicly available stun servers for NAT traversal. For 85% of the cases, this is just fine. But for rest 15% of the cases, when one of the user in a call in behind a corporate firewall, the call won't connect. In order to let this user behind firewall connect to a call successfully, A TURN server is needed. There are no such publicly available TURN servers as TURN servers use up a lot of bandwidth to relay audio/video streams which makes them very very costly. Either you can host your own TURN servers and pay the bills by yourself for usage or take up commercially available TURN server.
+
+#### This is an optional setting. It is not at all mandatory!
+
+- [COTURN](https://github.com/coturn/coturn) is a open source TURN server you can host yourself and use. Be careful to configure it properly so that it covers maximum scenarios for NAT traversal.
+- [Twillio TURN](https://www.twilio.com/docs/stun-turn) is a commercially available STUN / TURN server which one can use in a pay per use model.
+
+You TURN server credential will look like this.
+
+```
+{
+    urls: "turn:turn.yourdomain.com:3478",
+    username: "username",
+    credential: "password",
+  }
+```
+
+TURN server credentials are managed at the server side in cignal. In order to add TURN server credentials, you need to call the `cignal.setICEServers(iceServers)` as mentioned below.
+
+```
+const iceServers = [
+  {urls: "stun:turn.yourdomain.com:3478"},
+  {
+    urls: "turn:turn.yourdomain.com:3478",
+    username: "username",
+    credential: "password",
+  },
+  {
+    urls: "turn:turn.yourdomain.com:443",
+    username: "username",
+    credential: "password",
+  },
+  {
+    urls: "turn:turn.yourdomain.com:443?transport=tcp",
+    username: "username",
+    credential: "password",
+  }
+  ];
+
+  cignal.setICEServers(iceServers);
+
+```
+
+Keep in mind that you need to call this function before calling 'cignal.joinRoom()' for the first time else the TURN server credentials will not be used for the call. Once the custom ICE server credentials are set, these will be used for all the calls. You need not set it before calling `cignal.joinRoom()` each time. You can call `cignal.setICEServers(iceServers);` any number of times but keep in mind that you shouldnot call it when the signalling server is busy catering to call requests. You need to do it when the signalling server usage is really low if not zero!
 
 ## cignal-server npm module
 

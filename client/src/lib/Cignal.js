@@ -180,6 +180,26 @@ export class Cignal extends EventEmitter {
       role: this.data.myRole,
     });
     this._socket.on("message", (data) => this.gotMessageFromServer(data));
+    // const iceServers = [
+    //   { urls: "stun:turn.yourdomain.com:3478" },
+    //   {
+    //     urls: "turn:turn.yourdomain.com:3478",
+    //     username: "username",
+    //     credential: "password",
+    //   },
+    //   {
+    //     urls: "turn:turn.yourdomain.com:443",
+    //     username: "username",
+    //     credential: "password",
+    //   },
+    //   {
+    //     urls: "turn:turn.yourdomain.com:443?transport=tcp",
+    //     username: "username",
+    //     credential: "password",
+    //   },
+    // ];
+
+    // this.setICEServers(iceServers);
     this._localStream = stream;
     this.emit("localStream", this._localStream);
   }
@@ -361,6 +381,7 @@ export class Cignal extends EventEmitter {
       this.data.remotePeerId = null;
       this._remoteStream = null;
       this._localStream = null;
+      this._socket.close();
     } else {
       logger.error("No peerconnection object found!");
     }
@@ -380,5 +401,75 @@ export class Cignal extends EventEmitter {
         logger.error("Async: Could not copy text:%o ", err);
       }
     );
+  }
+
+  async setICEServers(iceServers) {
+    logger.debug("iceservers is Array:%s", Array.isArray(iceServers));
+    if (!Array.isArray(iceServers)) {
+      this.clientErrorHandler({
+        reason: "iceServers must be of type Array.",
+        error: null,
+      });
+      return;
+    }
+
+    if (typeof iceServers === "array" && iceServers.length > 4) {
+      this.clientErrorHandler({
+        reason: "iceServers can have maximum of 4 elements.",
+        error: null,
+      });
+      return;
+    }
+
+    if (iceServers[0].urls && !iceServers[0].urls.includes("stun:")) {
+      this.clientErrorHandler({
+        reason: "iceServers must have 1 STUN urls as the 1st element",
+        error: null,
+      });
+      return;
+    }
+    if (
+      iceServers[1].urls &&
+      (!iceServers[1].urls.includes("turn:") ||
+        !iceServers[1].username ||
+        !iceServers[1].credential)
+    ) {
+      this.clientErrorHandler({
+        reason: "iceServers 2nd element is not valid. please check again.",
+        error: null,
+      });
+      return;
+    }
+    if (
+      iceServers[2].urls &&
+      (!iceServers[2].urls.includes("turn:") ||
+        !iceServers[2].username ||
+        !iceServers[2].credential)
+    ) {
+      this.clientErrorHandler({
+        reason: "iceServers 3rd element is not valid. please check again.",
+        error: null,
+      });
+      return;
+    }
+
+    if (
+      iceServers[3].urls &&
+      (!iceServers[3].urls.includes("turn:") ||
+        !iceServers[3].username ||
+        !iceServers[3].credential)
+    ) {
+      this.clientErrorHandler({
+        reason: "iceServers 3rd element is not valid. please check again.",
+        error: null,
+      });
+      return;
+    }
+
+    const iceServersRes = await this._socket.request({
+      type: "setIceServers",
+      message: iceServers,
+    });
+    logger.debug("Server side Ice servers are:%o", iceServersRes);
   }
 }
