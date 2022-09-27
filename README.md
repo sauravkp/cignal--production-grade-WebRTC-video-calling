@@ -93,8 +93,8 @@ The below parameters are needed to instantitate the room object.
 
 ```
 const peerId = undefined;
-const peerName = getUrlParam("peerName", "Peer");
-const roomId = getUrlParam("roomId", "9876543210");
+const peerName = window.prompt("What's your name?", "Peer");
+const roomId = getUrlParam("roomId", null);
 const url = `https://${window.location.host}/`;
 let cignal;
 
@@ -202,7 +202,7 @@ cignal-client side libraries will be created after the stable version of cignal-
 4. Client side display of realtime Network status
 5. On-demand ICE restarts to recover from network failures
 
-Drop a mail to `hello@centedge.io` for additional feature requests.
+Drop a mail to `support@centedge.io` for additional feature requests/ support requests with existing features / bug fixes.
 
 ## Production grade video calling
 
