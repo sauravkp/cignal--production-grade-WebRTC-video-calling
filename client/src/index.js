@@ -7,11 +7,18 @@ const peerId = undefined;
 const peerName = peerNamePrompt === null ? "Peer" : peerNamePrompt;
 const roomId = getUrlParam("roomId", null);
 const url = `https://${window.location.host}/`;
+const mediaConstraints = {
+  audio: true,
+  video: {
+    width: { min: 320, ideal: 1280, max: 1280 },
+    height: { min: 240, ideal: 720, max: 720 },
+    aspectRatio: 1.777777778,
+    frameRate: { min: 15, max: 30 },
+  },
+};
 let cignal;
 
 document.getElementById("otherElements").hidden = true;
-const usernameInput = document.querySelector("#usernameInput");
-const loginBtn = document.querySelector("#loginBtn");
 const usernameShow = document.querySelector("#showLocalUserName");
 const showAllUsers = document.querySelector("#allUsers");
 const remoteUsernameShow = document.querySelector("#showRemoteUserName");
@@ -26,7 +33,13 @@ window.addEventListener("load", async function () {
   logger.debug("All assets are loaded");
   logger.debug(window.location);
 
-  cignal = await Cignal.createRoom({ url, peerId, roomId, peerName });
+  cignal = await Cignal.createRoom({
+    url,
+    peerId,
+    roomId,
+    peerName,
+    mediaConstraints,
+  });
   logger.debug("cignal is:%O", cignal);
   usernameShow.innerHTML = `Hello,  ${cignal.data.myDisplayName}`;
   cignal.on("remoteStream", (remoteStream) => {

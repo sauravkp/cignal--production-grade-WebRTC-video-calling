@@ -91,18 +91,29 @@ The below parameters are needed to instantitate the room object.
 
 `getUrlParam(key,default_value)` function takes 2 parameters. 1st one is the key name to read from the url and the second is the default value in case that key is not available in the url.
 
+`mediaConstraints` are needed if one wants to fine tune audio /video properties of the device intended to be used in the video call and influence the default properties set by the device at the time of media stream acquisition. By default it is set to `{audio:true,video:true}`. Be careful with this as it may cause call failures due to wrong constraint parameters. If you are not familiar with `gumConstraints`, it is better to leave at the default setting. Below is a sample valid `mediaConstraints` value which you can use.
+
 ```
 const peerId = undefined;
 const peerName = window.prompt("What's your name?", "Peer");
 const roomId = getUrlParam("roomId", null);
 const url = `https://${window.location.host}/`;
+const mediaConstraints = {
+  audio: true,
+  video: {
+    width: { min: 320, ideal: 1280, max: 1280 },
+    height: { min: 240, ideal: 720, max: 720 },
+    aspectRatio: 1.777777778,
+    frameRate: { min: 15, max: 30 },
+  },
+};
 let cignal;
 
 window.addEventListener("load", async function () {
   logger.debug("All assets are loaded");
   logger.debug(window.location);
 
-  cignal = await Cignal.createRoom({ url, peerId, roomId, peerName});
+  cignal = await Cignal.createRoom({ url, peerId, roomId, peerName, mediaConstraints});
   logger.debug("cignal is:%O", cignal);
 
   cignal.on("remoteStream", (remoteStream) => {

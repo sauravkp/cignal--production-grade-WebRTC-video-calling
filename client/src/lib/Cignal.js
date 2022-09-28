@@ -12,15 +12,23 @@ export class Cignal extends EventEmitter {
     peerId = undefined,
     peerName = undefined,
     role = undefined,
+    mediaConstraints = undefined,
   }) {
     if (!peerId) peerId = uuidv4();
     if (!roomId) roomId = getRandomInt();
     if (!url) url = window.location.href;
     //  if (!url) return { success: false, reason: "url is required!" };
 
-    return new Cignal({ url, peerId, roomId, peerName, role });
+    return new Cignal({
+      url,
+      peerId,
+      roomId,
+      peerName,
+      role,
+      mediaConstraints,
+    });
   }
-  constructor({ url, peerId, roomId, peerName, role }) {
+  constructor({ url, peerId, roomId, peerName, role, mediaConstraints }) {
     super();
     this._closed = false;
     this._id = roomId;
@@ -30,7 +38,7 @@ export class Cignal extends EventEmitter {
     this._remoteStream = null;
     this._url = url;
     this._data = {};
-    this.prepareForCall({ peerName, peerId, role });
+    this.prepareForCall({ peerName, peerId, role, mediaConstraints });
   }
 
   get id() {
@@ -61,12 +69,12 @@ export class Cignal extends EventEmitter {
     return this._localStream;
   }
 
-  async prepareForCall({ peerName, peerId, role }) {
+  async prepareForCall({ peerName, peerId, role, mediaConstraints }) {
     this.data.myDisplayName = peerName;
     this.data.myPeerId = peerId;
     this.data.myRole = role;
 
-    await this.getUserMedia();
+    await this.getUserMedia(mediaConstraints);
   }
   send(msg) {
     if (this._closed) return;
@@ -144,10 +152,13 @@ export class Cignal extends EventEmitter {
     }
   }
 
-  async getUserMedia() {
-    logger.debug("Inside getusermedia");
+  async getUserMedia(mediaConstraints) {
+    logger.debug(
+      "Inside getusermedia with mediaConstraints:%o",
+      mediaConstraints
+    );
     if (!this._localStream) {
-      let constraints = {
+      let constraints = mediaConstraints || {
         video: true,
         audio: true,
       };
